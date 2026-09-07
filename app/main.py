@@ -14,6 +14,7 @@ from src.config import CITY
 from src.prediction_service import (
     predict_aqi,
     get_latest_features,
+    get_shap_explanation,
 )
 
 
@@ -322,6 +323,86 @@ def predict():
 
                 "Prediction service "
                 "failed"
+
+            )
+
+        )
+
+# ============================================================
+# SHAP EXPLAINABILITY ENDPOINT
+# ============================================================
+
+@app.get("/explain")
+def explain_prediction():
+
+    try:
+
+        logger.info(
+            "SHAP explanation request received"
+        )
+
+
+        # ====================================================
+        # GET SHAP EXPLANATION
+        # ====================================================
+
+        explanations = (
+            get_shap_explanation()
+        )
+
+
+        # ====================================================
+        # RETURN TOP FEATURES
+        # ====================================================
+
+        top_features = (
+
+            explanations[:10]
+
+        )
+
+
+        logger.info(
+            "SHAP explanation completed"
+        )
+
+
+        return {
+
+            "city": CITY,
+
+            "model": (
+                "Random Forest"
+            ),
+
+            "explanation": (
+                top_features
+            ),
+
+            "timestamp": (
+                datetime.now().isoformat()
+            )
+
+        }
+
+
+    except Exception as e:
+
+        logger.error(
+
+            f"SHAP explanation failed: {str(e)}"
+
+        )
+
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=(
+
+                "SHAP explanation "
+                "service failed"
 
             )
 

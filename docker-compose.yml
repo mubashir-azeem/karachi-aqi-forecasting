@@ -1,5 +1,9 @@
 services:
 
+  # ==========================================================
+  # FASTAPI BACKEND
+  # ==========================================================
+
   api:
 
     build: .
@@ -7,16 +11,54 @@ services:
     container_name: karachi-aqi-api
 
     ports:
-      - "${API_PORT}:8000"
+
+      - "${API_PORT:-8000}:8000"
 
     env_file:
+
       - .env
 
     volumes:
-      - karachi-aqi-feast-data:/app/feature_repo/feature_repo/data
+
+      - ./feature_repo/feature_repo/data:/app/feature_repo/feature_repo/data
 
     restart: unless-stopped
 
+
+  # ==========================================================
+  # STREAMLIT FRONTEND
+  # ==========================================================
+
+  frontend:
+
+    build: .
+
+    container_name: karachi-aqi-frontend
+
+    command: >
+
+      streamlit run frontend/app.py
+      --server.address 0.0.0.0
+      --server.port 8501
+
+    ports:
+
+      - "8501:8501"
+
+    environment:
+
+      API_URL: http://api:8000
+
+    depends_on:
+
+      - api
+
+    restart: unless-stopped
+
+
+  # ==========================================================
+  # FEATURE UPDATE SCHEDULER
+  # ==========================================================
 
   scheduler:
 
@@ -27,16 +69,15 @@ services:
     command: python src/scheduler.py
 
     env_file:
+
       - .env
 
     volumes:
-      - karachi-aqi-feast-data:/app/feature_repo/feature_repo/data
+
+      - ./feature_repo/feature_repo/data:/app/feature_repo/feature_repo/data
+
+    depends_on:
+
+      - api
 
     restart: unless-stopped
-
-
-volumes:
-
-  karachi-aqi-feast-data:
-
-    external: true
