@@ -1,0 +1,42 @@
+services:
+
+  api:
+
+    build: .
+
+    container_name: karachi-aqi-api
+
+    ports:
+      - "${API_PORT}:8000"
+
+    env_file:
+      - .env
+
+    volumes:
+      - karachi-aqi-feast-data:/app/feature_repo/feature_repo/data
+
+    restart: unless-stopped
+
+
+  scheduler:
+
+    build: .
+
+    container_name: karachi-aqi-scheduler
+
+    command: python src/scheduler.py
+
+    env_file:
+      - .env
+
+    volumes:
+      - karachi-aqi-feast-data:/app/feature_repo/feature_repo/data
+
+    restart: unless-stopped
+
+
+volumes:
+
+  karachi-aqi-feast-data:
+
+    external: true
